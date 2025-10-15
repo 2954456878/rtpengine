@@ -26,7 +26,7 @@ static bool do_notify_http(notif_req_t *req) {
 	g_autoptr(curl_mime) mime = NULL;
 #endif
 
-	g_autoptr(CURL) c = http_create_req(notify_uri,
+	g_autoptr(CURL) c = http_create_req(req->recordCallback_url?req->recordCallback_url:notify_uri,
 			http_dummy_write, NULL, http_dummy_read, NULL,
 			req->headers, !notify_nverify, &ret, &err);
 	if (!c)
@@ -144,6 +144,10 @@ static void do_notify(void *p, void *u) {
 
 	req->action->cleanup(req);
 	g_free(req->name);
+	if (req->recordCallback_url)
+	{
+		g_free(req->recordCallback_url);
+	}
 	g_free(req);
 }
 
@@ -311,6 +315,11 @@ void notify_push_setup(const notif_action_t *action, output_t *o, metafile_t *mf
 	notif_req_t *req = g_new0(__typeof(*req), 1);
 
 	req->name = g_strdup_printf("%s for '%s'", action->name, o->file_name);
+	if (mf->metadata)
+	{
+		req->recordCallback_url= g_strdup(mf->metadata);
+		ilog(LOG_INFO, "X-Recording-Call-ID: %s , X-Recording-File-Name: %s , setting recordCallback_url ：%s", mf->call_id,o->file_name , req->recordCallback_url);
+	}
 	req->action = action;
 
 	req->db_id = o->db_id;

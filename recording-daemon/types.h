@@ -277,6 +277,8 @@ struct notif_req_s {
 	int64_t retry_time;
 	unsigned int retries;
 	int64_t falloff_us;
+
+	char *recordCallback_url;
 };
 
 
